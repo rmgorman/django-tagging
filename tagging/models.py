@@ -24,7 +24,7 @@ qn = connection.ops.quote_name
 ############
 
 class TagManager(models.Manager):
-    def update_tags(self, obj, tag_names):
+    def update_tags(self, obj, tag_names, user, access):
         """
         Update tags associated with an object.
         """
@@ -46,10 +46,10 @@ class TagManager(models.Manager):
         current_tag_names = [tag.name for tag in current_tags]
         for tag_name in updated_tag_names:
             if tag_name not in current_tag_names:
-                tag, created = self.get_or_create(name=tag_name)
+                tag, created = self.get_or_create(name=tag_name, user=user, access=access)
                 TaggedItem._default_manager.create(tag=tag, object=obj)
 
-    def add_tag(self, obj, tag_name):
+    def add_tag(self, obj, tag_name, user, access):
         """
         Associates the given object with a tag.
         """
@@ -61,7 +61,7 @@ class TagManager(models.Manager):
         tag_name = tag_names[0]
         if settings.FORCE_LOWERCASE_TAGS:
             tag_name = tag_name.lower()
-        tag, created = self.get_or_create(name=tag_name)
+        tag, created = self.get_or_create(name=tag_name, user=user, access=access)
         ctype = ContentType.objects.get_for_model(obj)
         TaggedItem._default_manager.get_or_create(
             tag=tag, content_type=ctype, object_id=obj.pk)
@@ -457,7 +457,10 @@ class Tag(models.Model):
     """
     A tag.
     """
+    ACCESS_CHOICES = (('0', 'User'), ('1', 'Staff'), ('2', 'Admin'), ('3', 'Pivot')) 
     name = models.CharField(_('name'), max_length=50, unique=True, db_index=True)
+    user = models.ForeignKey(User, verbose_name=_('user'), related_name='tags')
+    access = models.CharField(_('level'), choices=ACCESS_CHOICES)
 
     objects = TagManager()
 
