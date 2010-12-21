@@ -27,7 +27,7 @@ qn = connection.ops.quote_name
 class TagManager(models.Manager):
     def update_tags(self, obj, tag_names, user, access):
         """
-        Update tags associated with an object.
+        Update tags associated with an object, user, and access level.
         """
         ctype = ContentType.objects.get_for_model(obj)
         current_tags = list(self.filter(items__content_type__pk=ctype.pk,
@@ -70,13 +70,13 @@ class TagManager(models.Manager):
     def get_for_object(self, obj, user, access):
         """
         Create a queryset matching all tags associated with the given
-        object.
+        object, user, and access level list.
         """
         ctype = ContentType.objects.get_for_model(obj)
         return self.filter(items__content_type__pk=ctype.pk,
                            items__object_id=obj.pk,
                            user=user,
-                           access=access)
+                           access__in=access)
 
     def _get_usage(self, model, counts=False, min_count=None, extra_joins=None, extra_criteria=None, params=None):
         """
