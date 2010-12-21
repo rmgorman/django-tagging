@@ -67,14 +67,16 @@ class TagManager(models.Manager):
         TaggedItem._default_manager.get_or_create(
             tag=tag, content_type=ctype, object_id=obj.pk)
 
-    def get_for_object(self, obj):
+    def get_for_object(self, obj, user, access):
         """
         Create a queryset matching all tags associated with the given
         object.
         """
         ctype = ContentType.objects.get_for_model(obj)
         return self.filter(items__content_type__pk=ctype.pk,
-                           items__object_id=obj.pk)
+                           items__object_id=obj.pk,
+                           user=user,
+                           access=access)
 
     def _get_usage(self, model, counts=False, min_count=None, extra_joins=None, extra_criteria=None, params=None):
         """
