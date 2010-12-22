@@ -463,7 +463,7 @@ class Tag(models.Model):
     A tag.
     """
     ACCESS_CHOICES = (('0', 'User'), ('1', 'Staff'), ('2', 'Admin'), ('3', 'Pivot')) 
-    name = models.CharField(_('name'), max_length=50, unique=True, db_index=True)
+    name = models.CharField(_('name'), max_length=50, db_index=True)
     user = models.ForeignKey(User, verbose_name=_('user'), related_name='tags')
     access = models.CharField(_('level'), max_length=2, choices=ACCESS_CHOICES)
 
