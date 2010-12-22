@@ -471,6 +471,7 @@ class Tag(models.Model):
 
     class Meta:
         ordering = ('name',)
+        unique_together = ('name', 'user', 'access')
         verbose_name = _('tag')
         verbose_name_plural = _('tags')
 
