@@ -467,7 +467,7 @@ class Tag(models.Model):
     """
     A tag.
     """
-    ACCESS_CHOICES = (('0', 'User'), ('1', 'Staff'), ('2', 'Admin'), ('3', 'Pivot')) 
+    ACCESS_CHOICES = (('0', 'user'), ('1', 'staff'), ('2', 'admin'), ('3', 'pivot')) 
     name = models.CharField(_('name'), max_length=50, db_index=True)
     user = models.ForeignKey(User, verbose_name=_('user'), related_name='tags')
     access = models.CharField(_('level'), max_length=2, choices=ACCESS_CHOICES)
@@ -482,6 +482,10 @@ class Tag(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def get_icon(self):
+        return "<span class=\"indicator tag %s ui-corner-all\">%s</span>" % (self.get_access_display(), self.name)
+        
 
 class TaggedItem(models.Model):
     """
