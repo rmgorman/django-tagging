@@ -69,15 +69,20 @@ class TagManager(models.Manager):
         TaggedItem._default_manager.get_or_create(
             tag=tag, content_type=ctype, object_id=obj.pk)
 
-    def get_for_object(self, obj, user, access):
+    def get_for_object(self, obj, user=None, access=['0']):
         """
         Create a queryset matching all tags associated with the given
         object, user, and access level list.
         """
         ctype = ContentType.objects.get_for_model(obj)
-        return self.filter(items__content_type__pk=ctype.pk,
+        if user:
+            return self.filter(items__content_type__pk=ctype.pk,
                            items__object_id=obj.pk,
                            user=user,
+                           access__in=access)
+        else:
+            return self.filter(items__content_type__pk=ctype.pk,
+                           items__object_id=obj.pk,
                            access__in=access)
 
     def _get_usage(self, model, counts=False, min_count=None, extra_joins=None, extra_criteria=None, params=None):
