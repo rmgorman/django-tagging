@@ -12,7 +12,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection, models
 from django.db.models.query import QuerySet
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
 
 from tagging import settings
 from tagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
@@ -25,14 +24,13 @@ qn = connection.ops.quote_name
 ############
 
 class TagManager(models.Manager):
-    def update_tags(self, obj, tag_names, user, access):
+    def update_tags(self, obj, tag_names, access):
         """
-        Update tags associated with an object, user, and access level.
+        Update tags associated with an object, and access level.
         """
         ctype = ContentType.objects.get_for_model(obj)
         current_tags = list(self.filter(items__content_type__pk=ctype.pk,
                                         items__object_id=obj.pk,
-                                        user=user,
                                         access=access))
         updated_tag_names = parse_tag_input(tag_names)
         if settings.FORCE_LOWERCASE_TAGS:
@@ -49,10 +47,10 @@ class TagManager(models.Manager):
         current_tag_names = [tag.name for tag in current_tags]
         for tag_name in updated_tag_names:
             if tag_name not in current_tag_names:
-                tag, created = self.get_or_create(name=tag_name, user=user, access=access)
+                tag, created = self.get_or_create(name=tag_name, access=access)
                 TaggedItem._default_manager.create(tag=tag, object=obj)
 
-    def add_tag(self, obj, tag_name, user, access):
+    def add_tag(self, obj, tag_name, access):
         """
         Associates the given object with a tag.
         """
@@ -64,26 +62,20 @@ class TagManager(models.Manager):
         tag_name = tag_names[0]
         if settings.FORCE_LOWERCASE_TAGS:
             tag_name = tag_name.lower()
-        tag, created = self.get_or_create(name=tag_name, user=user, access=access)
+        tag, created = self.get_or_create(name=tag_name, access=access)
         ctype = ContentType.objects.get_for_model(obj)
         TaggedItem._default_manager.get_or_create(
             tag=tag, content_type=ctype, object_id=obj.pk)
 
-    def get_for_object(self, obj, user=None, access=['0']):
+    def get_for_object(self, obj, access=['0']):
         """
         Create a queryset matching all tags associated with the given
-        object, user, and access level list.
+        object, and access level list.
         """
         ctype = ContentType.objects.get_for_model(obj)
-        if user:
-            return self.filter(items__content_type__pk=ctype.pk,
-                           items__object_id=obj.pk,
-                           user=user,
-                           access__in=access)
-        else:
-            return self.filter(items__content_type__pk=ctype.pk,
-                           items__object_id=obj.pk,
-                           access__in=access)
+        return self.filter(items__content_type__pk=ctype.pk,
+                       items__object_id=obj.pk,
+                       access__in=access)
 
     def _get_usage(self, model, counts=False, min_count=None, extra_joins=None, extra_criteria=None, params=None):
         """
@@ -469,14 +461,13 @@ class Tag(models.Model):
     """
     ACCESS_CHOICES = (('0', 'user'), ('1', 'staff'), ('2', 'admin'), ('3', 'pivot')) 
     name = models.CharField(_('name'), max_length=50, db_index=True)
-    user = models.ForeignKey(User, verbose_name=_('user'), related_name='tags')
     access = models.CharField(_('level'), max_length=2, choices=ACCESS_CHOICES)
 
     objects = TagManager()
 
     class Meta:
         ordering = ('name',)
-        unique_together = ('name', 'user', 'access')
+        unique_together = ('name', 'access')
         verbose_name = _('tag')
         verbose_name_plural = _('tags')
 
