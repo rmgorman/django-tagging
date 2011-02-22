@@ -459,7 +459,7 @@ class Tag(models.Model):
     """
     A tag.
     """
-    ACCESS_CHOICES = (('0', 'user'), ('1', 'staff'), ('2', 'admin'), ('3', 'pivot')) 
+    ACCESS_CHOICES = getattr(settings, "TAGGING_ACCESS_CHOICES", (('0', 'user'), ('1', 'staff'), ('2', 'admin'), ('3', 'pivot'))) 
     name = models.CharField(_('name'), max_length=50, db_index=True)
     access = models.CharField(_('level'), max_length=2, choices=ACCESS_CHOICES)
 
